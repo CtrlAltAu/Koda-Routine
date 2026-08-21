@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Koda Mission">
+<link rel="manifest" href="manifest.json">
+<title>Koda's Daily Mission</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background-color: #0f172a;
+    color: #f8fafc;
+    margin: 0;
+    padding: 12px;
+    display: flex;
+    justify-content: center;
+  }
+  .app-container {
+    width: 100%;
+    max-width: 520px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .header-card {
+    background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+    border-radius: 16px;
+    padding: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
+  }
+  .title { font-size: 20px; font-weight: 900; margin: 0; text-transform: uppercase; letter-spacing: 0.5px; }
+  .subtitle { font-size: 12px; color: #bfdbfe; margin-top: 2px; }
+  .badge {
+    background: #facc15;
+    color: #0f172a;
+    font-weight: 900;
+    font-size: 11px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    text-align: center;
+    line-height: 1.1;
+  }
+  .badge span { font-size: 15px; display: block; }
+  .progress-wrap {
+    background: #1e293b;
+    border-radius: 10px;
+    padding: 10px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .progress-labels { display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; color: #94a3b8; }
+  .progress-bar-bg { background: #334155; height: 10px; border-radius: 6px; overflow: hidden; }
+  .progress-fill { background: #10b981; height: 100%; width: 0%; transition: width 0.3s ease; }
+  .task-list { display: flex; flex-direction: column; gap: 8px; }
+  .task-card {
+    background: #1e293b;
+    border: 2px solid #334155;
+    border-radius: 12px;
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    user-select: none;
+    transition: transform 0.1s, border-color 0.2s, background 0.2s;
+  }
+  .task-card:active { transform: scale(0.98); }
+  .task-card.completed { background: #064e3b; border-color: #10b981; }
+  .time-tag {
+    font-size: 12px;
+    font-weight: 800;
+    color: #93c5fd;
+    background: #0f172a;
+    padding: 4px 8px;
+    border-radius: 6px;
+    white-space: nowrap;
+  }
+  .task-card.completed .time-tag { color: #a7f3d0; }
+  .task-emoji { font-size: 22px; }
+  .task-info { flex: 1; }
+  .task-title { font-size: 14px; font-weight: 800; color: #f8fafc; margin: 0 0 2px 0; }
+  .task-desc { font-size: 11px; color: #94a3b8; margin: 0; line-height: 1.2; }
+  .task-card.completed .task-desc { color: #cbd5e1; }
+  .check-circle {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 2px solid #64748b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #0f172a;
+    font-size: 16px;
+    font-weight: 900;
+    color: transparent;
+    transition: all 0.2s;
+  }
+  .task-card.completed .check-circle { background: #10b981; border-color: #10b981; color: #ffffff; }
+  .reset-btn {
+    background: #334155;
+    color: #e2e8f0;
+    border: none;
+    border-radius: 10px;
+    padding: 12px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 6px;
+  }
+  .reset-btn:active { background: #475569; }
+</style>
+</head>
+<body>
+
+<div class="app-container">
+  <div class="header-card">
+    <div>
+      <h1 class="title">⚡ Koda's Mission</h1>
+      <div class="subtitle">Complete list • Unlock bike time</div>
+    </div>
+    <div class="badge">TARGET<span>2:00 PM</span></div>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-labels">
+      <span>Live Sync Active</span>
+      <span id="progress-text">0 / 8 Done</span>
+    </div>
+    <div class="progress-bar-bg">
+      <div class="progress-fill" id="progress-bar"></div>
+    </div>
+  </div>
+
+  <div class="task-list">
+    <div class="task-card" onclick="toggleTask(0)">
+      <div class="time-tag">11:00 AM</div>
+      <div class="task-emoji">⚡</div>
+      <div class="task-info">
+        <div class="task-title">Wake & Fuel Up</div>
+        <div class="task-desc">Alarm off • Tall glass of water • High-protein breakfast • Dressed & teeth brushed</div>
+      </div>
+      <div class="check-circle">✓</div>
+    </div>
+
+    <div class="task-card" onclick="toggleTask(1)">
+      <div class="time-tag">11:20 AM</div>
+      <div class="task-emoji">🛏️</div>
+      <div class="task-info">
+        <div class="task-title">Room Blitz (10 Min)</div>
+        <div class="task-desc">Bed made • Clothes in hamper • Floor clear of gear & rubbish</div>
+      </div>
+      <div class="check-circle">✓</div>
+    </div>
+
+    <div class="task-card" onclick="toggleTask(2)">
+      <div class="time-tag">11:30 AM</div>
+      <div class="task-emoji">📚</div>
+      <div class="task-info">
+        <div class="task-title">School Focus — Part 1</div>
+        <div class="task-desc">Academic work with Mum • Visual timer running for 45 min</div>
+      </div>
+      <div class="check-circle">✓</div>
+    </div>
+
+    <div class="task-card" onclick="toggleTask(3)">
+      <div class="time-tag">12:15 PM</div>
+      <div class="task-emoji">☕</div>
+      <div class="task-info">
+        <div class="task-title">Brain Break (15 Min)</div>
+        <div class="task-desc">Snack / stretch / movement • Strictly no video games or screens</div>
+      </div>
+      <div class="check-circle">✓</div>
+    </div>
+
+    <div class="task-card" onclick="toggleTask(4)">
+      <div class="time-tag">12:30 PM</div>
+      <div class="task-emoji">📝</div>
+      <div class="task-info">
+        <div class="task-title">School Focus — Part 2</div>
+        <div class="task-desc">Final 45-min push • Work complete • Workspace packed away</div>
+      </div>
+      <div class="check-circle">✓</div>
+    </div>
+
+    <div class="task-card" onclick="toggleTask(5)">
+      <div class="time-tag">1:15 PM</div>
+      <div class="task-emoji">🍔</div>
+      <div class="task-info">
+        <div class="task-title">Lunch Break</div>
+        <div class="task-desc">Eat lunch & hydrate • Quick recharge before chores sprint</div>
+      </div>
+      <div class="check-circle">✓</div>
+    </div>
+
+    <div class="task-card" onclick="toggleTask(6)">
+      <div class="time-tag">1:40 PM</div>
+      <div class="task-emoji">🗑️</div>
+      <div class="task-info">
+        <div class="task-title">Daily Chores Blitz (20 Min)</div>
+        <div class="task-desc">Bins emptied • Dishwasher loaded/unloaded • Kitchen bench clean</div>
+      </div>
+      <div class="check-circle">✓</div>
+    </div>
+
+    <div class="task-card" onclick="toggleTask(7)" style="border-color: #eab308;">
+      <div class="time-tag" style="background: #eab308; color: #000;">2:00 PM</div>
+      <div class="task-emoji">🔓</div>
+      <div class="task-info">
+        <div class="task-title" style="color: #facc15;">AFTERNOON UNLOCKED!</div>
+        <div class="task-desc" style="color: #fde047;">Mum inspects list & confirms → Bike & free time unlocked!</div>
+      </div>
+      <div class="check-circle">✓</div>
+    </div>
+  </div>
+
+  <button class="reset-btn" onclick="resetTasks()">🔄 Reset Checklist for New Day</button>
+</div>
+
+<!-- Firebase Realtime SDK -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+  import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDACXkEFFDFKemTKtkXPHTX0EzZWFUScRI",
+    authDomain: "koda-routine.firebaseapp.com",
+    databaseURL: "https://koda-routine-default-rtdb.firebaseio.com",
+    projectId: "koda-routine",
+    storageBucket: "koda-routine.firebasestorage.app",
+    messagingSenderId: "96020026048",
+    appId: "1:96020026048:web:6518f93a46e77430165325"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  const taskRef = ref(db, 'koda_tasks');
+
+  const totalTasks = 8;
+  let taskState = new Array(totalTasks).fill(false);
+
+  onValue(taskRef, (snapshot) => {
+    const data = snapshot.val();
+    taskState = data || new Array(totalTasks).fill(false);
+    renderUI();
+  });
+
+  function renderUI() {
+    let completed = 0;
+    const cards = document.querySelectorAll('.task-card');
+    taskState.forEach((isDone, i) => {
+      if (isDone) {
+        cards[i].classList.add('completed');
+        completed++;
+      } else {
+        cards[i].classList.remove('completed');
+      }
+    });
+    const percent = Math.round((completed / totalTasks) * 100);
+    document.getElementById('progress-bar').style.width = percent + '%';
+    document.getElementById('progress-text').innerText = `${completed} / ${totalTasks} Done (${percent}%)`;
+  }
+
+  window.toggleTask = function(index) {
+    taskState[index] = !taskState[index];
+    if (navigator.vibrate) navigator.vibrate(40);
+    set(taskRef, taskState);
+  };
+
+  window.resetTasks = function() {
+    if (confirm("Reset checklist for today?")) {
+      taskState = new Array(totalTasks).fill(false);
+      set(taskRef, taskState);
+    }
+  };
+</script>
+</body>
+</html>
