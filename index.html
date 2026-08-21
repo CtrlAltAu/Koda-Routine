@@ -48,6 +48,55 @@
     line-height: 1.1;
   }
   .badge span { font-size: 15px; display: block; }
+  
+  /* Bonus Achievements Section */
+  .bonus-section {
+    background: #1e1b4b;
+    border: 2px solid #6366f1;
+    border-radius: 14px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .bonus-title {
+    font-size: 13px;
+    font-weight: 900;
+    color: #c7d2fe;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .bonus-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  .bonus-badge {
+    background: #312e81;
+    border: 2px solid #4f46e5;
+    border-radius: 10px;
+    padding: 8px 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.2s;
+  }
+  .bonus-badge.active {
+    background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);
+    border-color: #fef08a;
+    box-shadow: 0 0 12px rgba(245, 158, 11, 0.5);
+    transform: scale(1.02);
+  }
+  .bonus-icon { font-size: 20px; }
+  .bonus-name { font-size: 12px; font-weight: 800; color: #e0e7ff; line-height: 1.2; }
+  .bonus-badge.active .bonus-name { color: #000000; font-weight: 900; }
+
+  /* Progress Bar */
   .progress-wrap {
     background: #1e293b;
     border-radius: 10px;
@@ -59,6 +108,8 @@
   .progress-labels { display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; color: #94a3b8; }
   .progress-bar-bg { background: #334155; height: 10px; border-radius: 6px; overflow: hidden; }
   .progress-fill { background: #10b981; height: 100%; width: 0%; transition: width 0.3s ease; }
+  
+  /* Task Cards */
   .task-list { display: flex; flex-direction: column; gap: 8px; }
   .task-card {
     background: #1e293b;
@@ -129,9 +180,32 @@
     <div class="badge">TARGET<span>2:00 PM</span></div>
   </div>
 
+  <!-- BONUS FEATS SECTION -->
+  <div class="bonus-section">
+    <div class="bonus-title">🏆 Daily Epic Feats (Bonus Power)</div>
+    <div class="bonus-grid">
+      <div class="bonus-badge" id="feat-0" onclick="toggleFeat(0)">
+        <div class="bonus-icon">🧠</div>
+        <div class="bonus-name">Broke Mental Block</div>
+      </div>
+      <div class="bonus-badge" id="feat-1" onclick="toggleFeat(1)">
+        <div class="bonus-icon">🤐</div>
+        <div class="bonus-name">Zero-Complaint Day</div>
+      </div>
+      <div class="bonus-badge" id="feat-2" onclick="toggleFeat(2)">
+        <div class="bonus-icon">🚀</div>
+        <div class="bonus-name">Self-Starter Speed</div>
+      </div>
+      <div class="bonus-badge" id="feat-3" onclick="toggleFeat(3)">
+        <div class="bonus-icon">🤝</div>
+        <div class="bonus-name">Legend Teamwork</div>
+      </div>
+    </div>
+  </div>
+
   <div class="progress-wrap">
     <div class="progress-labels">
-      <span>Live Sync Active</span>
+      <span>Daily Tasks</span>
       <span id="progress-text">0 / 8 Done</span>
     </div>
     <div class="progress-bar-bg">
@@ -221,7 +295,7 @@
     </div>
   </div>
 
-  <button class="reset-btn" onclick="resetTasks()">🔄 Reset Checklist for New Day</button>
+  <button class="reset-btn" onclick="resetAll()">🔄 Reset Checklist & Feats for New Day</button>
 </div>
 
 <!-- Firebase Realtime SDK -->
@@ -242,17 +316,26 @@
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
   const taskRef = ref(db, 'koda_tasks');
+  const featRef = ref(db, 'koda_feats');
 
   const totalTasks = 8;
+  const totalFeats = 4;
   let taskState = new Array(totalTasks).fill(false);
+  let featState = new Array(totalFeats).fill(false);
 
   onValue(taskRef, (snapshot) => {
     const data = snapshot.val();
     taskState = data || new Array(totalTasks).fill(false);
-    renderUI();
+    renderTasks();
   });
 
-  function renderUI() {
+  onValue(featRef, (snapshot) => {
+    const data = snapshot.val();
+    featState = data || new Array(totalFeats).fill(false);
+    renderFeats();
+  });
+
+  function renderTasks() {
     let completed = 0;
     const cards = document.querySelectorAll('.task-card');
     taskState.forEach((isDone, i) => {
@@ -268,16 +351,34 @@
     document.getElementById('progress-text').innerText = `${completed} / ${totalTasks} Done (${percent}%)`;
   }
 
+  function renderFeats() {
+    featState.forEach((isActive, i) => {
+      const el = document.getElementById(`feat-${i}`);
+      if (el) {
+        if (isActive) el.classList.add('active');
+        else el.classList.remove('active');
+      }
+    });
+  }
+
   window.toggleTask = function(index) {
     taskState[index] = !taskState[index];
     if (navigator.vibrate) navigator.vibrate(40);
     set(taskRef, taskState);
   };
 
-  window.resetTasks = function() {
-    if (confirm("Reset checklist for today?")) {
+  window.toggleFeat = function(index) {
+    featState[index] = !featState[index];
+    if (navigator.vibrate) navigator.vibrate([30, 50, 30]);
+    set(featRef, featState);
+  };
+
+  window.resetAll = function() {
+    if (confirm("Reset tasks and feats for a new day?")) {
       taskState = new Array(totalTasks).fill(false);
+      featState = new Array(totalFeats).fill(false);
       set(taskRef, taskState);
+      set(featRef, featState);
     }
   };
 </script>
